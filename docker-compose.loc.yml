@@ -19,6 +19,9 @@ services:
       - CAST_SERVICE_HOST_URL=http://cast_service:8000/api/v1/casts/
     depends_on:
       - movie_db
+      - keycloak
+    ports:
+      - 8081:8000
 
   movie_db:
     image: postgres:12.1-alpine
@@ -87,6 +90,8 @@ services:
       KC_DB: postgres
       KC_DB_URL: "jdbc:postgresql://keycloak_db:5432/keycloak"
       KC_METRICS_ENABLED: true
+    ports:
+      - 7070:8080
     volumes:
       - keycloak-volume:/opt/jboss/keycloak/standalone/data
       - ./keycloak/my-realm.json:/tmp/my-realm.json:ro
