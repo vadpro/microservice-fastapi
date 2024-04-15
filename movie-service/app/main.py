@@ -16,24 +16,25 @@ idp = FastAPIKeycloak(
     admin_client_id="admin-cli",
     admin_client_secret="PO8uim2tII5DKU2eQu3Yey08k1HTlZ3G",
     realm="FastAPIRealm",
-    callback_uri="http://movie.ng/callback"
+    callback_uri="http://127.0.0.1:8081/callback"
 )
 idp.add_swagger_config(app)
 
 @app.get("/admin")
 # def admin(user: OIDCUser = Depends(idp.get_current_user(required_roles=["admin"]))):
-def admin(user: OIDCUser = Depends(idp.get_current_user)):
-    u = user()
-    return f'Hi premium user {u}'
+def admin(user: OIDCUser = Depends(idp.get_current_user())):
+    from icecream import ic
+
+    ic(user)
+    return f'Hi premium user {user}'
 
 @app.get("/user/roles")
-def user_roles(user: OIDCUser = Depends(idp.get_current_user)):
+def user_roles(user: OIDCUser = Depends(idp.get_current_user())):
     return f'{user.roles}'
 
 @app.get("/login-link", tags=["auth-flow"])
 def login_redirect():
     return idp.login_uri
-
 
 @app.get("/callback", tags=["auth-flow"])
 def callback(session_state: str, code: str):
