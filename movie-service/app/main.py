@@ -12,17 +12,17 @@ app = FastAPI(openapi_url="/api/v1/movies/openapi.json", docs_url="/api/v1/movie
 idp = FastAPIKeycloak(
     server_url="http://172.17.0.1:7070",
     client_id="FastAPIClient",
-    client_secret="OASGV2HuGc1YcRFMJbqvr8vfutthmIdL",
+    client_secret="XHpcmWMXaOHph2ybfgm7EAPuV46FZoR6",  # Clients -> FastAPIClient -> Credentials tab -> Client Secret
     admin_client_id="admin-cli",
-    admin_client_secret="PO8uim2tII5DKU2eQu3Yey08k1HTlZ3G",
+    admin_client_secret="Kayabj0Wtnzd5FGSM3xiBxzMMWBzgINT",  # Clients -> admin-cli -> Credentials tab -> Client Secret
     realm="FastAPIRealm",
-    callback_uri="http://127.0.0.1:8081/callback"
+    callback_uri="http://localhost:8081/callback"
 )
 idp.add_swagger_config(app)
 
 @app.get("/admin")
-# def admin(user: OIDCUser = Depends(idp.get_current_user(required_roles=["admin"]))):
-def admin(user: OIDCUser = Depends(idp.get_current_user())):
+def admin(user: OIDCUser = Depends(idp.get_current_user(required_roles=["admin_user"]))):
+#def admin(user: OIDCUser = Depends(idp.get_current_user())):
     from icecream import ic
 
     ic(user)
@@ -31,6 +31,7 @@ def admin(user: OIDCUser = Depends(idp.get_current_user())):
 @app.get("/user/roles")
 def user_roles(user: OIDCUser = Depends(idp.get_current_user())):
     return f'{user.roles}'
+
 
 @app.get("/login-link", tags=["auth-flow"])
 def login_redirect():
