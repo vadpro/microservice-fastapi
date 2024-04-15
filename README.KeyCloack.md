@@ -25,6 +25,9 @@ http://127.0.0.1:8081/callback
 ! Export & Import Realm KeyCloak
 
 ------------------------------
+Example Auth with Angular 
+
 Auth with Postman:
 
+Extent User model
 ------------------------------
