@@ -19,7 +19,7 @@ docker compose up
 
 ### Test
 
-# KeyCloack (admin / admin)
+# KeyCloack (Default login: admin / admin)
 http://keycloak.loc/
 
 # Nginx movies API
