@@ -1,0 +1,45 @@
+version: '3.7'
+
+networks:
+  default:
+    name: docker-proxy-overlay
+    external: true
+
+
+services:
+  keycloak_db:
+    image: postgis/postgis:14-3.3-alpine
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "keycloak"]
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: keycloak
+    volumes:
+      - postgres_data_keycloak:/var/lib/postgresql/data/
+
+  keycloak:
+    depends_on:
+      - keycloak_db
+    image: quay.io/keycloak/keycloak:24.0.1
+    command: ["start-dev", "--import-realm"]
+    environment:
+      VIRTUAL_HOST: keycloak.loc
+      VIRTUAL_PORT: 8080
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: keycloak
+      KC_DB: postgres
+      KC_DB_URL: "jdbc:postgresql://keycloak_db:5432/keycloak"
+      KC_METRICS_ENABLED: true
+    ports:
+      - 7070:8080
+    volumes:
+      - keycloak-volume:/opt/jboss/keycloak/standalone/data
+      - ./keycloak/my-realm.json:/tmp/my-realm.json:ro
+
+
+volumes:
+  postgres_data_keycloak:
+  keycloak-volume:

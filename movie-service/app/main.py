@@ -1,3 +1,5 @@
+import os
+
 from fastapi import FastAPI, Depends
 from app.api.movies import movies
 from app.api.db import metadata, database, engine
@@ -10,15 +12,16 @@ metadata.create_all(engine)
 app = FastAPI(openapi_url="/api/v1/movies/openapi.json", docs_url="/api/v1/movies/docs")
 
 idp = FastAPIKeycloak(
-    server_url="http://172.17.0.1:7070",
-    client_id="FastAPIClient",
-    client_secret="XHpcmWMXaOHph2ybfgm7EAPuV46FZoR6",  # Clients -> FastAPIClient -> Credentials tab -> Client Secret
-    admin_client_id="admin-cli",
-    admin_client_secret="Kayabj0Wtnzd5FGSM3xiBxzMMWBzgINT",  # Clients -> admin-cli -> Credentials tab -> Client Secret
-    realm="FastAPIRealm",
-    callback_uri="http://localhost:8081/callback"
+    server_url=os.getenv('KEYCLOAK_SERVER_URL', "http://172.17.0.1:7070"),
+    client_id=os.getenv('KEYCLOAK_CLIENT_ID'),
+    client_secret=os.getenv('KEYCLOAK_CLIENT_SECRET'),  # Clients -> FastAPIClient -> Credentials tab -> Client Secret
+    admin_client_id=os.getenv('KEYCLOAK_ADMIN_CLIENT_ID'),
+    admin_client_secret=os.getenv('KEYCLOAK_ADMIN_CLIENT_SECRET'),  # Clients -> admin-cli -> Credentials tab -> Client Secret
+    realm=os.getenv('KEYCLOAK_REALM'),
+    callback_uri=os.getenv('KEYCLOAK_CALLBACK_URI')
 )
 idp.add_swagger_config(app)
+
 
 @app.get("/admin")
 def admin(user: OIDCUser = Depends(idp.get_current_user(required_roles=["admin_user"]))):
@@ -42,7 +45,7 @@ def callback(session_state: str, code: str):
     return idp.exchange_authorization_code(session_state=session_state, code=code)
 
 
-@app.get("/logout", tags=["auth-flow"])
+@app.get("/logout-link", tags=["auth-flow"])
 def logout():
     return idp.logout_uri
 
@@ -50,6 +53,7 @@ def logout():
 @app.on_event("startup")
 async def startup():
     await database.connect()
+
 
 @app.on_event("shutdown")
 async def shutdown():
