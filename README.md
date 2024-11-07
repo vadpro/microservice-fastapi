@@ -19,9 +19,20 @@ docker compose up keycloak
 ```
 
 ### Test
-
-# KeyCloack (Default login: admin / admin)
+### Create user when starting project at local server
+# 1. KeyCloack (Default login: admin / admin)
 http://keycloak.loc/
+# 2. Click "Create realm"
+# 3. Resource file -> Browse -> Select file from project -> keycloak -> realm-export.json -> Create
+# 4. Goto Users -> Create new user
+#       Username = "admin"
+#       Email = "admin@admin.com"
+#       First name = "first"
+#       Last name = "user"
+#    CLick "Create"
+# 5. User -> Credentials -> Set password -> 123123 (Temporary = Off) -> Save
+# 6. In postman send request: 
+#      Fast API -> Auth -> Login [admin] [password] [FastApiClient]
 
 # dev
 http://api-cast.dev/
@@ -32,3 +43,4 @@ http://movie.ng/api/v1/movies/
 
 # Nginx casts API
 http://movie.ng/api/v1/casts/
+
