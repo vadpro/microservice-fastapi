@@ -38,8 +38,6 @@ services:
     volumes:
       - keycloak-volume:/opt/jboss/keycloak/standalone/data
 
-
-
 volumes:
   postgres_data_keycloak:
   keycloak-volume:

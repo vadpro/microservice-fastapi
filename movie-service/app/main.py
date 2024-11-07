@@ -25,11 +25,11 @@ idp.add_swagger_config(app)
 
 @app.get("/admin")
 def admin(user: OIDCUser = Depends(idp.get_current_user(required_roles=["admin_user"]))):
-#def admin(user: OIDCUser = Depends(idp.get_current_user())):
+# def admin(user: OIDCUser = Depends(idp.get_current_user())):
     from icecream import ic
 
     ic(user)
-    return f'Hi premium user {user}'
+    return f'MOVIE SERVICE, Hi premium user {user}'
 
 @app.get("/user/roles")
 def user_roles(user: OIDCUser = Depends(idp.get_current_user())):
