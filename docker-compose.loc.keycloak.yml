@@ -22,7 +22,7 @@ services:
     depends_on:
       - keycloak_db
     image: quay.io/keycloak/keycloak:24.0.1
-    command: ["start-dev", "--import-realm"]
+    command: ["start-dev"]
     environment:
       VIRTUAL_HOST: keycloak.loc
       VIRTUAL_PORT: 8080
@@ -37,7 +37,7 @@ services:
       - 7070:8080
     volumes:
       - keycloak-volume:/opt/jboss/keycloak/standalone/data
-      - ./keycloak/my-realm.json:/tmp/my-realm.json:ro
+
 
 
 volumes:

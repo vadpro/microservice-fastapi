@@ -22,8 +22,14 @@ http://localhost:8081/login-link
 After redirect get access token
 http://127.0.0.1:8081/callback
 ------------------------------
+Export & Import Realm KeyCloak
+https://www.keycloak.org/server/importExport
 
-! Export & Import Realm KeyCloak
+### Export Realm
+Realm Settings -> Actions -> Partial Export (keycloak/realm-export.json)
+
+### Import Realm
+Create Realm -> import file (keycloak/realm-export.json) -> Create Realm
 
 ------------------------------
 Example Auth with Angular 
