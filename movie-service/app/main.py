@@ -5,7 +5,9 @@ from app.api.movies import movies
 from app.api.db import metadata, database, engine
 
 from fastapi_keycloak import FastAPIKeycloak, OIDCUser
+from icecream import ic
 
+from app.utils_helper import prn
 
 metadata.create_all(engine)
 
@@ -22,11 +24,18 @@ idp = FastAPIKeycloak(
 )
 idp.add_swagger_config(app)
 
-
+# dependency injection
 @app.get("/admin")
+# def admin(user):
 def admin(user: OIDCUser = Depends(idp.get_current_user(required_roles=["admin_user"]))):
-# def admin(user: OIDCUser = Depends(idp.get_current_user())):
-    from icecream import ic
+    prn(user)
+    #
+    # user2 = Depends(idp.get_current_user())
+    # prn(user2)
+    # user = idp.get_current_user(required_roles=["admin_user"])
+    #
+    # OIDCUser = Depends(user)
+    # prn(OIDCUser)
 
     ic(user)
     return f'MOVIE SERVICE, Hi premium user {user}'
