@@ -31,8 +31,14 @@ http://keycloak.loc/
 #       Last name = "user"
 #    CLick "Create"
 # 5. User -> Credentials -> Set password -> 123123 (Temporary = Off) -> Save
-# 6. In postman send request: 
+# 6. Goto Clients -> admin-cli -> Credentials -> Regenerate -> Copy password to:
+# 6.1 to ".env.loc" -> KEYCLOAK_ADMIN_CLIENT_SECRET=...  
+# 6.2 to postman -> environments -> KEYCLOAK_ADMIN_CLIENT_SECRET=...  
+# 7. Restart project
+# 8. In postman send request: 
 #      Fast API -> Auth -> Login [admin] [password] [FastApiClient]
+
+
 
 # dev
 http://api-cast.dev/
