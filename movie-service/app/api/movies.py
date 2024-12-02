@@ -7,6 +7,7 @@ from app.api.service import is_cast_present
 
 movies = APIRouter()
 
+
 @movies.post('/', response_model=MovieOut, status_code=201)
 async def create_movie(payload: MovieIn):
     for cast_id in payload.casts_id:
@@ -21,9 +22,11 @@ async def create_movie(payload: MovieIn):
 
     return response
 
+
 @movies.get('/', response_model=List[MovieOut])
 async def get_movies():
     return await db_manager.get_all_movies()
+
 
 @movies.get('/{id}/', response_model=MovieOut)
 async def get_movie(id: int):
@@ -31,6 +34,7 @@ async def get_movie(id: int):
     if not movie:
         raise HTTPException(status_code=404, detail="Movie not found")
     return movie
+
 
 @movies.put('/{id}/', response_model=MovieOut)
 async def update_movie(id: int, payload: MovieUpdate):
@@ -50,6 +54,7 @@ async def update_movie(id: int, payload: MovieUpdate):
     updated_movie = movie_in_db.copy(update=update_data)
 
     return await db_manager.update_movie(id, updated_movie)
+
 
 @movies.delete('/{id}/', response_model=None)
 async def delete_movie(id: int):

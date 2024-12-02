@@ -24,6 +24,7 @@ idp = FastAPIKeycloak(
 )
 idp.add_swagger_config(app)
 
+
 # dependency injection
 @app.get("/admin")
 # def admin(user):
@@ -40,6 +41,7 @@ def admin(user: OIDCUser = Depends(idp.get_current_user(required_roles=["admin_u
     ic(user)
     return f'MOVIE SERVICE, Hi premium user {user}'
 
+
 @app.get("/user/roles")
 def user_roles(user: OIDCUser = Depends(idp.get_current_user())):
     return f'{user.roles}'
@@ -48,6 +50,7 @@ def user_roles(user: OIDCUser = Depends(idp.get_current_user())):
 @app.get("/login-link", tags=["auth-flow"])
 def login_redirect():
     return idp.login_uri
+
 
 @app.get("/callback", tags=["auth-flow"])
 def callback(session_state: str, code: str):
