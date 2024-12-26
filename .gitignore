@@ -2,3 +2,4 @@
 .idea/
 .env.loc
 *.pyc
+*.pyo
