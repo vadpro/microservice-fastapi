@@ -1,10 +1,9 @@
 import os
 
-from fastapi import FastAPI, Depends, HTTPException, Response
+from fastapi import FastAPI, Depends
 from app.api.movies import movies
 from app.api.db import metadata, database, engine
 from fastapi_keycloak import OIDCUser
-from jose import ExpiredSignatureError
 from icecream import ic
 
 from app.utils_helper import prn
@@ -13,14 +12,6 @@ from app.auth.keycloak import idp
 metadata.create_all(engine)
 
 app = FastAPI(openapi_url="/api/v1/movies/openapi.json", docs_url="/api/v1/movies/docs")
-
-@app.exception_handler(ExpiredSignatureError)
-async def expired_signature_handler(request, exc):
-    return Response(
-        status_code=401,
-        content='{"detail": "Token has expired"}',
-        media_type="application/json"
-    )
 
 idp.add_swagger_config(app)
 

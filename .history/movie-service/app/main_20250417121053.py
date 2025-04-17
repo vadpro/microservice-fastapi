@@ -1,27 +1,32 @@
 import os
 
-from fastapi import FastAPI, Depends, HTTPException, Response
+from fastapi import FastAPI, Depends
 from app.api.movies import movies
 from app.api.db import metadata, database, engine
-from fastapi_keycloak import OIDCUser
-from jose import ExpiredSignatureError
+
+from fastapi_keycloak import FastAPIKeycloak, OIDCUser
 from icecream import ic
 
 from app.utils_helper import prn
-from app.auth.keycloak import idp
+from app.config import (
+    KEYCLOAK_SERVER_URL, KEYCLOAK_CLIENT_ID, KEYCLOAK_CLIENT_SECRET,
+    KEYCLOAK_ADMIN_CLIENT_ID, KEYCLOAK_ADMIN_CLIENT_SECRET,
+    KEYCLOAK_REALM, KEYCLOAK_CALLBACK_URI
+)
 
 metadata.create_all(engine)
 
 app = FastAPI(openapi_url="/api/v1/movies/openapi.json", docs_url="/api/v1/movies/docs")
 
-@app.exception_handler(ExpiredSignatureError)
-async def expired_signature_handler(request, exc):
-    return Response(
-        status_code=401,
-        content='{"detail": "Token has expired"}',
-        media_type="application/json"
-    )
-
+idp = FastAPIKeycloak(
+    server_url=KEYCLOAK_SERVER_URL,
+    client_id=KEYCLOAK_CLIENT_ID,
+    client_secret=KEYCLOAK_CLIENT_SECRET,  # Clients -> FastAPIClient -> Credentials tab -> Client Secret
+    admin_client_id=KEYCLOAK_ADMIN_CLIENT_ID,
+    admin_client_secret=KEYCLOAK_ADMIN_CLIENT_SECRET,  # Clients -> admin-cli -> Credentials tab -> Client Secret
+    realm=KEYCLOAK_REALM,
+    callback_uri=KEYCLOAK_CALLBACK_URI
+)
 idp.add_swagger_config(app)
 
 

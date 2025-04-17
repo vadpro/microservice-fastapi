@@ -4,7 +4,7 @@ from fastapi_keycloak import OIDCUser
 
 from app.api.models import MovieOut, MovieIn, MovieUpdate, MovieWithCast
 from app.api import db_manager, service
-from app.auth.keycloak import idp
+from app.main import idp
 
 movies = APIRouter()
 

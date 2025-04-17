@@ -1,8 +1,7 @@
 import os
 
-from fastapi import FastAPI, Depends, HTTPException, Response
+from fastapi import FastAPI, Depends
 from fastapi_keycloak import FastAPIKeycloak, OIDCUser
-from jose import ExpiredSignatureError
 
 from app.api.casts import casts
 from app.api.db import metadata, database, engine
@@ -16,13 +15,6 @@ metadata.create_all(engine)
 
 app = FastAPI(openapi_url="/api/v1/casts/openapi.json", docs_url="/api/v1/casts/docs")
 
-@app.exception_handler(ExpiredSignatureError)
-async def expired_signature_handler(request, exc):
-    return Response(
-        status_code=401,
-        content='{"detail": "Token has expired"}',
-        media_type="application/json"
-    )
 
 idp = FastAPIKeycloak(
     server_url=KEYCLOAK_SERVER_URL,

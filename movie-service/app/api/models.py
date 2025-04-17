@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 
 
 class MovieIn(BaseModel):
@@ -18,3 +18,13 @@ class MovieUpdate(MovieIn):
     plot: Optional[str] = None
     genres: Optional[List[str]] = None
     casts_id: Optional[List[int]] = None
+
+
+class CastInfo(BaseModel):
+    id: int
+    name: str
+    nationality: Optional[str] = None
+
+
+class MovieWithCast(MovieOut):
+    casts: List[CastInfo]
