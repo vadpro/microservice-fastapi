@@ -1,16 +1,12 @@
 import os
 
 from fastapi import FastAPI, Depends, HTTPException, Response
-from fastapi_keycloak import FastAPIKeycloak, OIDCUser
+from fastapi_keycloak import OIDCUser
 from jose import ExpiredSignatureError
 
 from app.api.casts import casts
 from app.api.db import metadata, database, engine
-from app.config import (
-    KEYCLOAK_SERVER_URL, KEYCLOAK_CLIENT_ID, KEYCLOAK_CLIENT_SECRET,
-    KEYCLOAK_ADMIN_CLIENT_ID, KEYCLOAK_ADMIN_CLIENT_SECRET,
-    KEYCLOAK_REALM, KEYCLOAK_CALLBACK_URI
-)
+from app.auth.keycloak import idp
 
 metadata.create_all(engine)
 
@@ -24,31 +20,17 @@ async def expired_signature_handler(request, exc):
         media_type="application/json"
     )
 
-idp = FastAPIKeycloak(
-    server_url=KEYCLOAK_SERVER_URL,
-    client_id=KEYCLOAK_CLIENT_ID,
-    client_secret=KEYCLOAK_CLIENT_SECRET,  # Clients -> FastAPIClient -> Credentials tab -> Client Secret
-    admin_client_id=KEYCLOAK_ADMIN_CLIENT_ID,
-    admin_client_secret=KEYCLOAK_ADMIN_CLIENT_SECRET,  # Clients -> admin-cli -> Credentials tab -> Client Secret
-    realm=KEYCLOAK_REALM,
-    callback_uri=KEYCLOAK_CALLBACK_URI
-)
 idp.add_swagger_config(app)
-
 
 @app.get("/admin")
 def admin(user: OIDCUser = Depends(idp.get_current_user(required_roles=["admin_user"]))):
-# def admin(user: OIDCUser = Depends(idp.get_current_user())):
     from icecream import ic
-
     ic(user)
     return f'CAST SERVICE, Hi premium user {user}'
-
 
 @app.on_event("startup")
 async def startup():
     await database.connect()
-
 
 @app.on_event("shutdown")
 async def shutdown():
