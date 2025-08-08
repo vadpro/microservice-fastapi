@@ -12,12 +12,19 @@ services:
     volumes:
       - ./movie-service/:/app/
     environment:
-      - VIRTUAL_HOST=api-movie.dev
+      - VIRTUAL_HOST=api-movie.dj
       - VIRTUAL_PORT=8000
       - DATABASE_URI=postgresql://movie_db_username:movie_db_password@movie_db/movie_db_dev
       - CAST_SERVICE_HOST_URL=http://cast_service:8000/api/v1/casts/
     depends_on:
       - movie_db
+      - cast_service
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
 
   movie_db:
@@ -36,11 +43,17 @@ services:
     volumes:
       - ./cast-service/:/app/
     environment:
-      - VIRTUAL_HOST=api-cast.dev
+      - VIRTUAL_HOST=api-cast.dj
       - VIRTUAL_PORT=8000
       - DATABASE_URI=postgresql://cast_db_username:cast_db_password@cast_db/cast_db_dev
     depends_on:
       - cast_db
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   cast_db:
     image: postgres:12.1-alpine
@@ -50,6 +63,17 @@ services:
       - POSTGRES_USER=cast_db_username
       - POSTGRES_PASSWORD=cast_db_password
       - POSTGRES_DB=cast_db_dev
+
+  frontend:
+    build: ./frontend
+    env_file: .env.frontend.${ENV}
+    environment:
+      - VIRTUAL_HOST=microservice-app.dj
+      - VIRTUAL_PORT=3000
+    volumes:
+      - ./frontend/:/app/
+      - /app/node_modules
+      - /app/.next
 
   nginx:
     image: nginx:latest
@@ -61,6 +85,7 @@ services:
     depends_on:
       - cast_service
       - movie_service
+      - frontend
 
 
 volumes:

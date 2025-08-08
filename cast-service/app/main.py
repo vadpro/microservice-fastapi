@@ -1,6 +1,7 @@
 import os
 
 from fastapi import FastAPI, Depends, HTTPException, Response
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi_keycloak import OIDCUser
 from jose import ExpiredSignatureError
 
@@ -11,6 +12,15 @@ from app.auth.keycloak import idp
 metadata.create_all(engine)
 
 app = FastAPI(openapi_url="/api/v1/casts/openapi.json", docs_url="/api/v1/casts/docs")
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["https://microservice-app.dj", "http://localhost:3000", "http://localhost:8080"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.exception_handler(ExpiredSignatureError)
 async def expired_signature_handler(request, exc):
@@ -27,6 +37,10 @@ def admin(user: OIDCUser = Depends(idp.get_current_user(required_roles=["admin_u
     from icecream import ic
     ic(user)
     return f'CAST SERVICE, Hi premium user {user}'
+
+@app.get("/health")
+def health_check():
+    return {"status": "healthy", "service": "cast-service"}
 
 @app.on_event("startup")
 async def startup():

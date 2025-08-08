@@ -6,8 +6,8 @@ Example microservice architecture with fastapi and keycloak
 
 # Add few lines to /etc/hosts
 ```
-127.0.0.1 api-movie.dev
-127.0.0.1 api-cast.dev
+127.0.0.1 api-movie.dj
+127.0.0.1 api-cast.dj
 127.0.0.1 movie.ng
 127.0.0.1 keycloak.loc
 ```
@@ -41,8 +41,8 @@ http://keycloak.loc/
 
 
 # dev
-http://api-cast.dev/
-http://api-movie.dev/
+http://api-cast.dj/
+http://api-movie.dj/
 
 # Nginx movies API
 http://movie.ng/api/v1/movies/

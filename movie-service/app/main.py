@@ -1,6 +1,7 @@
 import os
 
 from fastapi import FastAPI, Depends, HTTPException, Response
+from fastapi.middleware.cors import CORSMiddleware
 from app.api.movies import movies
 from app.api.db import metadata, database, engine
 from fastapi_keycloak import OIDCUser
@@ -13,6 +14,15 @@ from app.auth.keycloak import idp
 metadata.create_all(engine)
 
 app = FastAPI(openapi_url="/api/v1/movies/openapi.json", docs_url="/api/v1/movies/docs")
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["https://microservice-app.dj", "http://localhost:3000", "http://localhost:8080"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.exception_handler(ExpiredSignatureError)
 async def expired_signature_handler(request, exc):
@@ -60,6 +70,10 @@ def callback(session_state: str, code: str):
 @app.get("/logout-link", tags=["auth-flow"])
 def logout():
     return idp.logout_uri
+
+@app.get("/health")
+def health_check():
+    return {"status": "healthy", "service": "movie-service"}
 
 
 @app.on_event("startup")

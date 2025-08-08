@@ -12,8 +12,12 @@ movies = APIRouter()
 @movies.post('/', response_model=MovieOut, status_code=201)
 async def create_movie(payload: MovieIn):
     for cast_id in payload.casts_id:
-        if not service.is_cast_present(cast_id):
-            raise HTTPException(status_code=404, detail=f"Cast with given id:{cast_id} not found")
+        cast_present = await service.is_cast_present(cast_id)
+        if not cast_present:
+            raise HTTPException(
+                status_code=404, 
+                detail=f"Cast with id {cast_id} not found or cast service is unavailable"
+            )
 
     movie_id = await db_manager.add_movie(payload)
     response = {
@@ -65,8 +69,12 @@ async def update_movie(id: int, payload: MovieUpdate):
 
     if 'casts_id' in update_data:
         for cast_id in payload.casts_id:
-            if not service.is_cast_present(cast_id):
-                raise HTTPException(status_code=404, detail=f"Cast with given id:{cast_id} not found")
+            cast_present = await service.is_cast_present(cast_id)
+            if not cast_present:
+                raise HTTPException(
+                    status_code=404, 
+                    detail=f"Cast with id {cast_id} not found or cast service is unavailable"
+                )
 
     movie_in_db = MovieIn(**movie)
 

@@ -11,3 +11,5 @@ venv/*
 *.log.*.*.*.*
 *.log.*.*.*.*.*
 .history/*
+.env.frontend.loc
+.next
