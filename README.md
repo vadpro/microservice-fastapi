@@ -8,20 +8,20 @@ Example microservice architecture with fastapi and keycloak
 ```
 127.0.0.1 api-movie.dj
 127.0.0.1 api-cast.dj
-127.0.0.1 movie.ng
-127.0.0.1 keycloak.loc
+127.0.0.1 microservice-app.dj
+127.0.0.1 microservice-app.ng
 ```
 
 # Up project
 ```
-docker compose up keycloak
+./up.sh
 
 ```
 
 ### Test
 ### Create user when starting project at local server
 # 1. KeyCloack (Default login: admin / admin)
-http://keycloak.loc/
+http://localhost:7070/
 # 2. Click "Create realm"
 # 3. Resource file -> Browse -> Select file from project -> keycloak -> realm-export.json -> Create
 # 4. Goto Users -> Create new user
@@ -45,8 +45,11 @@ http://api-cast.dj/
 http://api-movie.dj/
 
 # Nginx movies API
-http://movie.ng/api/v1/movies/
+http://microservice-app.ng/api/v1/movies/
 
 # Nginx casts API
-http://movie.ng/api/v1/casts/
+http://microservice-app.ng/api/v1/casts/
 
+# React (Next)
+http://microservice-app.dj/
+http://microservice-app.ng/
