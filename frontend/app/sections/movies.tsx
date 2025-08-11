@@ -1,7 +1,7 @@
 // @ts-nocheck
 "use client"
 import { useEffect, useState } from 'react'
-import { MoviesAPI, Movie } from '../../lib/api'
+import { MoviesAPI, Movie, CastsAPI, Cast } from '../../lib/api'
 
 function useToken() {
   const [token, setToken] = useState<string | undefined>(undefined)
@@ -37,6 +37,7 @@ export default function Movies() {
   const { token, loading: tokenLoading } = useToken()
 
   const [form, setForm] = useState<Omit<Movie, 'id'>>({ name: '', plot: '', genres: [], casts_id: [] })
+  const [castCache, setCastCache] = useState<Record<number, Cast>>({})
 
   useEffect(() => {
     if (tokenLoading) return // Wait for token to load
@@ -52,6 +53,31 @@ export default function Movies() {
       .catch(e => setError(String(e)))
       .finally(() => setLoading(false))
   }, [token, tokenLoading])
+
+  useEffect(() => {
+    if (!movies.length) return
+    const uniqueIds = new Set<number>()
+    movies.forEach(m => m.casts_id.forEach((id: number) => uniqueIds.add(id)))
+    const idsToFetch = Array.from(uniqueIds).filter((id) => !castCache[id])
+    if (!idsToFetch.length) return
+
+    Promise.all(
+      idsToFetch.map((id) =>
+        CastsAPI.get(id, token)
+          .then((cast) => [id, cast] as const)
+          .catch(() => null)
+      )
+    ).then((results) => {
+      const nextCache: Record<number, Cast> = { ...castCache }
+      results.forEach((pair) => {
+        if (pair) {
+          const [id, cast] = pair
+          nextCache[id] = cast
+        }
+      })
+      setCastCache(nextCache)
+    })
+  }, [movies, token, castCache])
 
   const createMovie = async () => {
     if (!token) {
@@ -99,6 +125,14 @@ export default function Movies() {
               <div>
                 <p className="font-medium">{m.name}</p>
                 <p className="text-sm text-gray-600">{m.plot}</p>
+                <p className="text-sm text-gray-600">Genres: {m.genres && m.genres.length ? m.genres.join(', ') : '—'}</p>
+                <p className="text-sm text-gray-600">
+                  Cast: {m.casts_id && m.casts_id.length ? m.casts_id.map((id: number) => {
+                    const c = castCache[id]
+                    if (!c) return `#${id}`
+                    return `${c.name}${c.nationality ? ` (${c.nationality})` : ''}`
+                  }).join(', ') : '—'}
+                </p>
               </div>
               <button onClick={() => deleteMovie(m.id)} className="px-3 py-1.5 rounded-md bg-red-600 text-white hover:bg-red-700">Delete</button>
             </li>
