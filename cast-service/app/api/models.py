@@ -1,10 +1,10 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, constr
 from typing import List, Optional
 
 
 class CastIn(BaseModel):
-    name: str
-    nationality: Optional[str] = None
+    name: constr(min_length=1, strip_whitespace=True)
+    nationality: Optional[constr(min_length=1, strip_whitespace=True)] = None
 
 
 class CastOut(CastIn):
@@ -12,4 +12,4 @@ class CastOut(CastIn):
 
 
 class CastUpdate(CastIn):
-    name: Optional[str] = None
+    name: Optional[constr(min_length=1, strip_whitespace=True)] = None
