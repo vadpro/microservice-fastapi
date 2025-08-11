@@ -43,6 +43,24 @@ export default function Casts() {
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({})
   const { token, loading: tokenLoading } = useToken()
 
+  const [casts, setCasts] = useState<Cast[]>([])
+  const [listLoading, setListLoading] = useState(true)
+
+  useEffect(() => {
+    if (tokenLoading) return
+
+    if (!token) {
+      setListLoading(false)
+      setError('Authentication required')
+      return
+    }
+
+    CastsAPI.list(token)
+      .then(setCasts)
+      .catch(e => setError(String(e)))
+      .finally(() => setListLoading(false))
+  }, [token, tokenLoading])
+
   const clearErrors = () => {
     setError('')
     setFieldErrors({})
@@ -75,6 +93,8 @@ export default function Casts() {
       const res = await CastsAPI.create(form, token)
       setCast(res)
       setForm({ name: '', nationality: '' })
+      // Optimistically add to list
+      setCasts((prev) => [res, ...prev])
     } catch (e: any) {
       // Parse validation errors if they exist
       if (e.message.includes('Validation failed:')) {
@@ -140,11 +160,30 @@ export default function Casts() {
       </div>
       {error && <p className="text-red-600 mb-2">{error}</p>}
       {cast && (
-        <div className="rounded-md border p-3">
+        <div className="rounded-md border p-3 mb-3">
           <p className="font-medium">#{cast.id} {cast.name}</p>
           <p className="text-sm text-gray-600">{cast.nationality}</p>
         </div>
       )}
+      <div className="mt-4">
+        <h3 className="font-medium mb-2">All casts</h3>
+        {listLoading ? (
+          <p className="text-sm text-gray-500">Loading casts...</p>
+        ) : error ? (
+          <p className="text-sm text-red-500">Failed to load casts</p>
+        ) : casts.length === 0 ? (
+          <p className="text-sm text-gray-500">No casts found.</p>
+        ) : (
+          <ul className="divide-y rounded-md border">
+            {casts.map((c) => (
+              <li key={c.id} className="p-3">
+                <p className="font-medium">#{c.id} {c.name}</p>
+                <p className="text-sm text-gray-600">{c.nationality}</p>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
     </div>
   )
 }

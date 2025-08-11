@@ -134,7 +134,19 @@ export class MoviesAPI {
 }
 
 export class CastsAPI {
-  private static baseUrl: string = 'https://api-cast.dj'
+  private static baseUrl: string = process.env.NEXT_PUBLIC_CAST_SERVICE_URL || 'https://api-cast.dj'
+
+  static async list(token?: string): Promise<Cast[]> {
+    const headers: Record<string, string> = {}
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`
+    }
+    const response = await fetch(`${this.baseUrl}/api/v1/casts/`, { headers })
+    if (!response.ok) {
+      throw new Error('Failed to fetch casts')
+    }
+    return response.json()
+  }
 
   static async get(id: number, token?: string): Promise<Cast> {
     const headers: Record<string, string> = {}
