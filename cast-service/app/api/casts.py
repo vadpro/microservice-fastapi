@@ -21,14 +21,29 @@ async def create_cast(payload: CastIn):
     return response
 
 
+@casts.get('/', response_model=List[CastOut])
+async def get_casts():
+    result = await db_manager.get_all_casts()
+    valid_casts = []
+    for item in result:
+        cast_dict = dict(item) if not isinstance(item, dict) else item
+        if cast_dict.get('name') and cast_dict.get('nationality'):
+            valid_casts.append(cast_dict)
+    return valid_casts
+
+
 @casts.get('/{id}/', response_model=CastOut)
 async def get_cast(id: int):
     cast = await db_manager.get_cast(id)
     if not cast:
         raise HTTPException(status_code=404, detail="Cast not found")
-    # Преобразуем в словарь, если это не словарь
     if not isinstance(cast, dict):
         cast = dict(cast)
+    
+    # Check if cast has valid data
+    if not cast.get('name') or not cast.get('nationality'):
+        raise HTTPException(status_code=404, detail="Cast data is invalid")
+    
     return cast
 
 
@@ -49,23 +64,19 @@ async def websocket_cast_info(websocket: WebSocket):
                 for cast_id in cast_ids:
                     cast = await db_manager.get_cast(cast_id)
                     if cast:
-                        # Преобразуем в словарь, если это не словарь
                         if not isinstance(cast, dict):
                             cast = dict(cast)
-                        result.append(cast)
+                        if cast.get('name') and cast.get('nationality'):
+                            result.append(cast)
                 
                 await websocket.send_json(result)
             except WebSocketDisconnect:
-                # Если соединение закрыто клиентом, просто выходим из цикла
                 break
             except Exception as e:
-                # Для других ошибок отправляем сообщение об ошибке
                 await websocket.send_json({"error": str(e)})
     except Exception as e:
-        # Логируем неожиданные ошибки
         print(f"Unexpected error in websocket_cast_info: {e}")
     finally:
-        # Закрываем соединение только если оно еще не закрыто
         try:
             await websocket.close()
         except:

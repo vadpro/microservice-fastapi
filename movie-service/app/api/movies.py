@@ -10,7 +10,7 @@ movies = APIRouter()
 
 
 @movies.post('/', response_model=MovieOut, status_code=201)
-async def create_movie(payload: MovieIn):
+async def create_movie(payload: MovieIn, user: OIDCUser = Depends(idp.get_current_user())):
     for cast_id in payload.casts_id:
         cast_present = await service.is_cast_present(cast_id)
         if not cast_present:
@@ -29,7 +29,8 @@ async def create_movie(payload: MovieIn):
 
 
 @movies.get('/', response_model=List[MovieOut])
-async def get_movies():
+async def get_movies(user: OIDCUser = Depends(idp.get_current_user())):
+    print(user)
     return await db_manager.get_all_movies()
 
 

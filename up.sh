@@ -1,4 +1,5 @@
 # bash
+source .env.loc
 echo "Start Keycloak..."
 docker compose -f docker-compose.loc.keycloak.yml up -d
 sleep 10s

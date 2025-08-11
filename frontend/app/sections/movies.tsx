@@ -4,27 +4,61 @@ import { useEffect, useState } from 'react'
 import { MoviesAPI, Movie } from '../../lib/api'
 
 function useToken() {
-  // We cannot read httpOnly cookie from client; for demo, we call backend without token for public endpoints.
-  // For protected endpoints, move to server components or add an API proxy that injects token from cookies.
-  return undefined as string | undefined
+  const [token, setToken] = useState<string | undefined>(undefined)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchToken = async () => {
+      try {
+        const response = await fetch('/api/auth/token')
+        if (response.ok) {
+          const data = await response.json()
+          setToken(data.access_token)
+        } else {
+          console.error('Failed to get token:', response.status)
+        }
+      } catch (error) {
+        console.error('Error fetching token:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchToken()
+  }, [])
+
+  return { token, loading }
 }
 
 export default function Movies() {
   const [movies, setMovies] = useState<Movie[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const token = useToken()
+  const { token, loading: tokenLoading } = useToken()
 
   const [form, setForm] = useState<Omit<Movie, 'id'>>({ name: '', plot: '', genres: [], casts_id: [] })
 
   useEffect(() => {
+    if (tokenLoading) return // Wait for token to load
+    
+    if (!token) {
+      setError('Authentication required')
+      setLoading(false)
+      return
+    }
+    
     MoviesAPI.list(token)
       .then(setMovies)
       .catch(e => setError(String(e)))
       .finally(() => setLoading(false))
-  }, [token])
+  }, [token, tokenLoading])
 
   const createMovie = async () => {
+    if (!token) {
+      setError('Authentication required')
+      return
+    }
+    
     try {
       const created = await MoviesAPI.create(form, token)
       setMovies((m: any[]) => [created, ...m])
@@ -35,6 +69,11 @@ export default function Movies() {
   }
 
   const deleteMovie = async (id: number) => {
+    if (!token) {
+      setError('Authentication required')
+      return
+    }
+    
     try {
       await MoviesAPI.delete(id, token)
       setMovies((m: any[]) => m.filter((x: any) => x.id !== id))
@@ -53,7 +92,7 @@ export default function Movies() {
         <input className="w-full rounded-md border-gray-300" placeholder="Cast IDs (comma)" value={form.casts_id.join(',')} onChange={e=>setForm({ ...form, casts_id: e.target.value.split(',').map(s=>parseInt(s)).filter(n=>!Number.isNaN(n)) })} />
         <button onClick={createMovie} className="px-3 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700">Create movie</button>
       </div>
-      {loading ? <p>Loading…</p> : error ? <p className="text-red-600">{error}</p> : (
+      {loading || tokenLoading ? <p>Loading…</p> : error ? <p className="text-red-600">{error}</p> : (
         <ul className="divide-y">
           {movies.map(m => (
             <li key={m.id} className="py-2 flex items-center justify-between">

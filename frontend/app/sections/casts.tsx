@@ -1,10 +1,33 @@
 // @ts-nocheck
 "use client"
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { CastsAPI, Cast, ValidationError } from '../../lib/api'
 
 function useToken() {
-  return undefined as string | undefined
+  const [token, setToken] = useState<string | undefined>(undefined)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchToken = async () => {
+      try {
+        const response = await fetch('/api/auth/token')
+        if (response.ok) {
+          const data = await response.json()
+          setToken(data.access_token)
+        } else {
+          console.error('Failed to get token:', response.status)
+        }
+      } catch (error) {
+        console.error('Error fetching token:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchToken()
+  }, [])
+
+  return { token, loading }
 }
 
 interface FieldErrors {
@@ -18,7 +41,7 @@ export default function Casts() {
   const [form, setForm] = useState<Omit<Cast, 'id'>>({ name: '', nationality: '' })
   const [error, setError] = useState('')
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({})
-  const token = useToken()
+  const { token, loading: tokenLoading } = useToken()
 
   const clearErrors = () => {
     setError('')
@@ -26,6 +49,11 @@ export default function Casts() {
   }
 
   const fetchCast = async () => {
+    if (!token) {
+      setError('Authentication required')
+      return
+    }
+    
     clearErrors()
     try {
       const res = await CastsAPI.get(parseInt(id), token)
@@ -37,6 +65,11 @@ export default function Casts() {
   }
 
   const createCast = async () => {
+    if (!token) {
+      setError('Authentication required')
+      return
+    }
+    
     clearErrors()
     try {
       const res = await CastsAPI.create(form, token)

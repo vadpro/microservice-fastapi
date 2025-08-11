@@ -78,7 +78,7 @@ services:
   nginx:
     image: nginx:latest
     environment:
-      - VIRTUAL_HOST=movie.ng
+      - VIRTUAL_HOST=microservice-app.ng
       - VIRTUAL_PORT=8080
     volumes:
       - ./nginx/nginx_config.conf:/etc/nginx/conf.d/default.conf

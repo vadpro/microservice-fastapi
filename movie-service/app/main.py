@@ -18,7 +18,14 @@ app = FastAPI(openapi_url="/api/v1/movies/openapi.json", docs_url="/api/v1/movie
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://microservice-app.dj", "http://localhost:3000", "http://localhost:8080"],
+    allow_origins=[
+        "https://microservice-app.dj", 
+        "http://microservice-app.ng",
+        "https://microservice-app.ng",
+        "http://localhost:3000", 
+        "http://localhost:8080",
+        "http://microservice-app.ng:8080"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
