@@ -1,10 +1,15 @@
 // @ts-nocheck
 "use client"
 import { useState } from 'react'
-import { CastsAPI, Cast } from '../../lib/api'
+import { CastsAPI, Cast, ValidationError } from '../../lib/api'
 
 function useToken() {
   return undefined as string | undefined
+}
+
+interface FieldErrors {
+  name?: string
+  nationality?: string
 }
 
 export default function Casts() {
@@ -12,10 +17,16 @@ export default function Casts() {
   const [id, setId] = useState('')
   const [form, setForm] = useState<Omit<Cast, 'id'>>({ name: '', nationality: '' })
   const [error, setError] = useState('')
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({})
   const token = useToken()
 
-  const fetchCast = async () => {
+  const clearErrors = () => {
     setError('')
+    setFieldErrors({})
+  }
+
+  const fetchCast = async () => {
+    clearErrors()
     try {
       const res = await CastsAPI.get(parseInt(id), token)
       setCast(res)
@@ -26,13 +37,37 @@ export default function Casts() {
   }
 
   const createCast = async () => {
-    setError('')
+    clearErrors()
     try {
       const res = await CastsAPI.create(form, token)
       setCast(res)
       setForm({ name: '', nationality: '' })
     } catch (e: any) {
-      setError(e.message)
+      // Parse validation errors if they exist
+      if (e.message.includes('Validation failed:')) {
+        const errorMessage = e.message.replace('Validation failed: ', '')
+        const errors = errorMessage.split(', ')
+        
+        const newFieldErrors: FieldErrors = {}
+        errors.forEach(error => {
+          const [field, message] = error.split(': ')
+          if (field === 'name' || field === 'nationality') {
+            newFieldErrors[field] = message
+          }
+        })
+        
+        setFieldErrors(newFieldErrors)
+      } else {
+        setError(e.message)
+      }
+    }
+  }
+
+  const handleInputChange = (field: keyof Omit<Cast, 'id'>, value: string) => {
+    setForm({ ...form, [field]: value })
+    // Clear field error when user starts typing
+    if (fieldErrors[field]) {
+      setFieldErrors({ ...fieldErrors, [field]: undefined })
     }
   }
 
@@ -45,8 +80,28 @@ export default function Casts() {
           <button onClick={fetchCast} className="px-3 py-2 rounded-md bg-gray-900 text-white hover:bg-gray-800">Fetch</button>
         </div>
         <div className="grid grid-cols-2 gap-2">
-          <input className="rounded-md border-gray-300" placeholder="Name" value={form.name} onChange={e=>setForm({ ...form, name: e.target.value })} />
-          <input className="rounded-md border-gray-300" placeholder="Nationality" value={form.nationality} onChange={e=>setForm({ ...form, nationality: e.target.value })} />
+          <div>
+            <input 
+              className={`rounded-md border-gray-300 w-full ${fieldErrors.name ? 'border-red-500' : ''}`} 
+              placeholder="Name" 
+              value={form.name} 
+              onChange={e => handleInputChange('name', e.target.value)} 
+            />
+            {fieldErrors.name && (
+              <p className="text-red-500 text-sm mt-1">{fieldErrors.name}</p>
+            )}
+          </div>
+          <div>
+            <input 
+              className={`rounded-md border-gray-300 w-full ${fieldErrors.nationality ? 'border-red-500' : ''}`} 
+              placeholder="Nationality" 
+              value={form.nationality} 
+              onChange={e => handleInputChange('nationality', e.target.value)} 
+            />
+            {fieldErrors.nationality && (
+              <p className="text-red-500 text-sm mt-1">{fieldErrors.nationality}</p>
+            )}
+          </div>
         </div>
         <button onClick={createCast} className="px-3 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700">Create cast</button>
       </div>

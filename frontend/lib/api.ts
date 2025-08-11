@@ -68,6 +68,19 @@ export interface Cast {
   nationality: string
 }
 
+// Validation error interfaces
+export interface ValidationError {
+  type: string
+  loc: string[]
+  msg: string
+  input: any
+  ctx?: Record<string, any>
+}
+
+export interface ValidationErrorResponse {
+  detail: ValidationError[]
+}
+
 // API classes for movies and casts
 export class MoviesAPI {
   private static baseUrl: string = 'https://api-movie.dj'
@@ -149,7 +162,20 @@ export class CastsAPI {
       headers,
       body: JSON.stringify(cast)
     })
+    
     if (!response.ok) {
+      const errorData = await response.json()
+      
+      // Handle validation errors
+      if (errorData.detail && Array.isArray(errorData.detail)) {
+        const validationErrors = errorData.detail as ValidationError[]
+        const errorMessages = validationErrors.map(error => {
+          const field = error.loc[error.loc.length - 1] // Get the field name
+          return `${field}: ${error.msg}`
+        }).join(', ')
+        throw new Error(`Validation failed: ${errorMessages}`)
+      }
+      
       throw new Error('Failed to create cast')
     }
     return response.json()
