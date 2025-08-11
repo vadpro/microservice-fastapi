@@ -169,6 +169,8 @@ export default function Casts() {
         <h3 className="font-medium mb-2">All casts</h3>
         {listLoading ? (
           <p className="text-sm text-gray-500">Loading casts...</p>
+        ) : error ? (
+          <p className="text-sm text-red-500">Failed to load casts</p>
         ) : casts.length === 0 ? (
           <p className="text-sm text-gray-500">No casts found.</p>
         ) : (
