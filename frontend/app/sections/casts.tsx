@@ -2,6 +2,7 @@
 "use client"
 import { useState, useEffect } from 'react'
 import { CastsAPI, Cast, ValidationError } from '../../lib/api'
+import { hasRole } from '../../lib/jwt'
 
 function useToken() {
   const [token, setToken] = useState<string | undefined>(undefined)
@@ -42,6 +43,7 @@ export default function Casts() {
   const [error, setError] = useState('')
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({})
   const { token, loading: tokenLoading } = useToken()
+  const [userInfo, setUserInfo] = useState<any>(null)
 
   const [casts, setCasts] = useState<Cast[]>([])
   const [listLoading, setListLoading] = useState(true)
@@ -54,6 +56,21 @@ export default function Casts() {
       setError('Authentication required')
       return
     }
+
+    // Fetch user info from Keycloak
+    const fetchUserInfo = async () => {
+      try {
+        const userResponse = await fetch('/api/auth/userinfo')
+        if (userResponse.ok) {
+          const userData = await userResponse.json()
+          setUserInfo(userData)
+        }
+      } catch (error) {
+        console.error('Error fetching user info:', error)
+      }
+    }
+
+    fetchUserInfo()
 
     CastsAPI.list(token)
       .then(setCasts)
@@ -127,36 +144,56 @@ export default function Casts() {
   return (
     <div className="bg-white rounded-xl shadow p-4">
       <h2 className="text-lg font-semibold mb-3">Casts</h2>
+      
+      {/* Role-based access control */}
+      {userInfo && !hasRole(userInfo, 'user') && (
+        <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+          <p className="text-yellow-800 text-sm">
+            ⚠️ You need the 'user' role to perform actions in this section.
+          </p>
+        </div>
+      )}
+      
       <div className="space-y-2 mb-3">
         <div className="flex gap-2">
           <input className="flex-1 rounded-md border-gray-300" placeholder="Cast ID" value={id} onChange={e=>setId(e.target.value)} />
-          <button onClick={fetchCast} className="px-3 py-2 rounded-md bg-gray-900 text-white hover:bg-gray-800">Fetch</button>
+          <button 
+            onClick={fetchCast} 
+            disabled={!userInfo || !hasRole(userInfo, 'user')}
+            className="px-3 py-2 rounded-md bg-gray-900 text-white hover:bg-gray-800 disabled:bg-gray-400 disabled:cursor-not-allowed"
+          >
+            Fetch
+          </button>
         </div>
-        <div className="grid grid-cols-2 gap-2">
-          <div>
-            <input 
-              className={`rounded-md border-gray-300 w-full ${fieldErrors.name ? 'border-red-500' : ''}`} 
-              placeholder="Name" 
-              value={form.name} 
-              onChange={e => handleInputChange('name', e.target.value)} 
-            />
-            {fieldErrors.name && (
-              <p className="text-red-500 text-sm mt-1">{fieldErrors.name}</p>
-            )}
-          </div>
-          <div>
-            <input 
-              className={`rounded-md border-gray-300 w-full ${fieldErrors.nationality ? 'border-red-500' : ''}`} 
-              placeholder="Nationality" 
-              value={form.nationality} 
-              onChange={e => handleInputChange('nationality', e.target.value)} 
-            />
-            {fieldErrors.nationality && (
-              <p className="text-red-500 text-sm mt-1">{fieldErrors.nationality}</p>
-            )}
-          </div>
-        </div>
-        <button onClick={createCast} className="px-3 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700">Create cast</button>
+        {userInfo && hasRole(userInfo, 'user') && (
+          <>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <input 
+                  className={`rounded-md border-gray-300 w-full ${fieldErrors.name ? 'border-red-500' : ''}`} 
+                  placeholder="Name" 
+                  value={form.name} 
+                  onChange={e => handleInputChange('name', e.target.value)} 
+                />
+                {fieldErrors.name && (
+                  <p className="text-red-500 text-sm mt-1">{fieldErrors.name}</p>
+                )}
+              </div>
+              <div>
+                <input 
+                  className={`rounded-md border-gray-300 w-full ${fieldErrors.nationality ? 'border-red-500' : ''}`} 
+                  placeholder="Nationality" 
+                  value={form.nationality} 
+                  onChange={e => handleInputChange('nationality', e.target.value)} 
+                />
+                {fieldErrors.nationality && (
+                  <p className="text-red-500 text-sm mt-1">{fieldErrors.nationality}</p>
+                )}
+              </div>
+            </div>
+            <button onClick={createCast} className="px-3 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700">Create cast</button>
+          </>
+        )}
       </div>
       {error && <p className="text-red-600 mb-2">{error}</p>}
       {cast && (
